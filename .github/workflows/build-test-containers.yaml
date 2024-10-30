@@ -1,13 +1,9 @@
 name: Build Test Containers
 run-name: Build Test Containers
 on:
-  workflow_dispatch:
   push:
     branches:
-      - 'main'
-    paths:
-      - 'container-images'
-      - '.github/workflows/build-test-containers.yaml'
+      - 'suppport-multi-arch-test-images'
 jobs:
   Explore-GitHub-Actions:
     env:

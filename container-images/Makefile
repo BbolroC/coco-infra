@@ -21,8 +21,8 @@ SHELL=/bin/bash
 
 
 # FIXME need to choose sane package URLs/names/tags
-COCO_PKG=confidential-containers/test-container
-COCO_PKG_IMGRS=confidential-cointainers/test-container-image-rs
+COCO_PKG=bbolroc/test-container
+COCO_PKG_IMGRS=bbolroc/test-container-image-rs
 
 
 
