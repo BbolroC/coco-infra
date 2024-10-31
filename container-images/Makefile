@@ -19,6 +19,22 @@ busybox
 
 SHELL=/bin/bash
 
+PLATFORMS := linux/amd64 linux/s390x
+
+define build_and_push_image
+	@for platform in $(PLATFORMS); do \
+		image_name="$(1)"; \
+		if [ "$$platform" = "linux/s390x" ]; then \
+			image_name="$(1)-s390x"; \
+		fi; \
+		echo "Building for $$platform with image name $$image_name..."; \
+		docker buildx build \
+		  -t $$image_name \
+		  -f $(2) \
+		  --platform $$platform --provenance=false --load $(3); \
+		docker push $$image_name; \
+	done
+endef
 
 # FIXME need to choose sane package URLs/names/tags
 COCO_PKG=bbolroc/test-container
@@ -39,19 +55,11 @@ all: \
 
 
 unsig:
-	docker build \
-	  -t ghcr.io/$(COCO_PKG):unsig \
-	  -f dockerfiles/alpine-with-sshd/Dockerfile \
-	  .
-	docker push ghcr.io/$(COCO_PKG):unsig
+	$(call build_and_push_image,ghcr.io/$(COCO_PKG):unsig,dockerfiles/alpine-with-sshd/Dockerfile,.)
 
 
 cosign-sig:
-	docker build \
-	  -t ghcr.io/$(COCO_PKG):cosign-sig \
-	  -f dockerfiles/alpine-with-sshd/Dockerfile \
-	  .
-	docker push ghcr.io/$(COCO_PKG):cosign-sig
+	$(call build_and_push_image,ghcr.io/$(COCO_PKG):cosign-sig,dockerfiles/alpine-with-sshd/Dockerfile,.)
 	# FIXME Replace expect script with something better
 	${CURDIR}/scripts/make-cosign-sig.exp $(COCO_PKG) cosign-sig
 
@@ -96,11 +104,7 @@ enc-cosign-sig: cosign-sig
 
 
 test-container-unencrypted:
-	docker build \
-	  -t ghcr.io/$(COCO_PKG):unencrypted \
-	  -f dockerfiles/alpine-with-sshd/Dockerfile \
-	  .
-	docker push ghcr.io/$(COCO_PKG):unencrypted
+	$(call build_and_push_image,ghcr.io/$(COCO_PKG):unencrypted,dockerfiles/alpine-with-sshd/Dockerfile,.)
 
 
 # NOTE: see enc-unsig about coco-keyprovider
@@ -114,5 +118,4 @@ test-container-encrypted: test-container-unencrypted
 
 
 busybox:
-	docker build -t ghcr.io/$(COCO_PKG_IMGRS):busybox dockerfiles/busybox
-	docker push ghcr.io/$(COCO_PKG_IMGRS):busybox
+	$(call build_and_push_image,ghcr.io/$(COCO_PKG_IMGRS):busybox,dockerfiles/busybox/Dockerfile,dockerfiles/busybox)
